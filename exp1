@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
-
+1
 using namespace std;
 
 // 复数类定义
