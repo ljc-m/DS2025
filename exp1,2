@@ -1,0 +1,225 @@
+#include <iostream>
+#include <string>
+using namespace std;
+class NumStack {
+private:
+    int data[100];  
+    int top;     
+
+public:
+    NumStack() {
+        top = -1;
+    }
+
+    void push(int num) {
+        if (top >= 99) {  
+            cout << "栈已满！" << endl;
+            return;
+        }
+        data[++top] = num; 
+    }
+
+    void pop() {
+        if (isEmpty()) {
+            cout << "栈为空，无法出栈！" << endl;
+            return;
+        }
+        top--; 
+    }
+
+    int getTop() {
+        if (isEmpty()) {
+            return -1; 
+        }
+        return data[top];
+    }
+
+    bool isEmpty() {
+        return top == -1;
+    }
+};
+
+class OpStack {
+private:
+    char data[100];  
+    int top;       
+
+public:
+    OpStack() {
+        top = -1;
+    }
+    void push(char op) {
+        if (top >= 99) {
+            cout << "栈已满！" << endl;
+            return;
+        }
+        data[++top] = op;
+    }
+    void pop() {
+        if (isEmpty()) {
+            cout << "栈为空，无法出栈！" << endl;
+            return;
+        }
+        top--;
+    }
+    char getTop() {
+        if (isEmpty()) {
+            return '\0'; 
+        }
+        return data[top];
+    }
+
+    bool isEmpty() {
+        return top == -1;
+    }
+};
+
+int getPriority(char op) {
+    if (op == '(') {
+        return 0; 
+    } else if (op == '+' || op == '-') {
+        return 1;
+    } else if (op == '*' || op == '/') {
+        return 2;
+    } else {
+        return -1; 
+    }
+}
+
+int calculate(int a, int b, char op) {
+    switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': 
+            if (b == 0) { 
+                return -1000000;  
+            }
+            return a / b; 
+        default: return -1000000;  
+    }
+}
+
+string calculator(string expr) {
+    NumStack numStack;
+    OpStack opStack;  
+    int len = expr.length();
+    int i = 0;
+    while (i < len) {
+        if (expr[i] == ' ') {
+            i++;
+            continue;
+        }
+        if (expr[i] >= '0' && expr[i] <= '9') {
+            int num = 0;
+            while (i < len && expr[i] >= '0' && expr[i] <= '9') {
+                num = num * 10 + (expr[i] - '0'); 
+                i++;
+            }
+            numStack.push(num); 
+        }
+        else if (expr[i] == '(') {
+            opStack.push(expr[i]);
+            i++;
+        }
+        else if (expr[i] == ')') {
+            // 弹出运算符，直到遇到左括号
+            while (!opStack.isEmpty() && opStack.getTop() != '(') {
+                // 确保有足够的数字可以计算
+                if (numStack.isEmpty()) {
+                    return "无效";
+                }
+                int b = numStack.getTop();
+                numStack.pop();
+                if (numStack.isEmpty()) {
+                    return "无效";
+                }
+                int a = numStack.getTop(); 
+                numStack.pop();
+                char op = opStack.getTop();
+                opStack.pop();
+                int res = calculate(a, b, op);
+                if (res == -1000000) { 
+                    return "无效";
+                }
+                numStack.push(res); 
+            }
+            if (opStack.isEmpty()) {
+                return "无效";
+            }
+            opStack.pop(); 
+            i++;
+        }
+        else if (expr[i] == '+' || expr[i] == '-' || expr[i] == '*' || expr[i] == '/') {
+            while (!opStack.isEmpty() && getPriority(opStack.getTop()) >= getPriority(expr[i])) {
+                if (numStack.isEmpty()) {
+                    return "无效";
+                }
+                int b = numStack.getTop();
+                numStack.pop();
+                if (numStack.isEmpty()) {
+                    return "无效";
+                }
+                int a = numStack.getTop();
+                numStack.pop();
+
+                char op = opStack.getTop();
+                opStack.pop();
+
+                int res = calculate(a, b, op);
+                if (res == -1000000) {
+                    return "无效";
+                }
+                numStack.push(res);
+            }
+            opStack.push(expr[i]); 
+            i++;
+        }
+        else {
+            return "无效";
+        }
+    }
+
+    while (!opStack.isEmpty()) {
+        if (opStack.getTop() == '(') {
+            return "无效";
+        }
+        if (numStack.isEmpty()) {
+            return "无效";
+        }
+        int b = numStack.getTop();
+        numStack.pop();
+        if (numStack.isEmpty()) {
+            return "无效";
+        }
+        int a = numStack.getTop();
+        numStack.pop();
+        char op = opStack.getTop();
+        opStack.pop();
+        int res = calculate(a, b, op);
+        if (res == -1000000) {
+            return "无效";
+        }
+        numStack.push(res);
+    }
+    if (numStack.isEmpty() || numStack.getTop() == -1) {
+        return "无效";
+    }
+    return to_string(numStack.getTop());
+}
+
+int main() {
+    // 有效案例
+    cout << "1+2*3 = " << calculator("1+2*3") << endl; 
+    cout << "(1+2)*3 = " << calculator("(1+2)*3") << endl; 
+    cout << "10/2-3 = " << calculator("10/2-3") << endl;   
+    cout << "5+(10-6)/2 = " << calculator("5+(10-6)/2") << endl;
+    cout << "20 - 5*3 + 8 = " << calculator("20 - 5*3 + 8") << endl; 
+    // 无效案例
+    cout << "\n1+*2 = " << calculator("1+*2") << endl; 
+    cout << "(1+2 = " << calculator("(1+2") << endl; 
+    cout << "5/0 = " << calculator("5/0") << endl;
+    cout << "12a+3 = " << calculator("12a+3") << endl;
+
+    return 0;
+}
