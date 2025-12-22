@@ -1,0 +1,228 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+struct BoundingBox {
+    float x1, y1;
+    float x2, y2;
+    float score;
+};
+
+void initRandom() {
+    srand((unsigned int)time(NULL));
+}
+
+void generateRandomBoxes(BoundingBox boxes[], int n) {
+    for (int i = 0; i < n; i++) {
+        float w = 50 + rand() % 151;
+        float h = 50 + rand() % 151;
+        boxes[i].x1 = rand() % (1001 - (int)w);
+        boxes[i].y1 = rand() % (1001 - (int)h);
+        boxes[i].x2 = boxes[i].x1 + w;
+        boxes[i].y2 = boxes[i].y1 + h;
+        boxes[i].score = (float)rand() / RAND_MAX;
+    }
+}
+
+void generateClusteredBoxes(BoundingBox boxes[], int n) {
+    float centers[4][2] = {{200, 200}, {300, 700}, {700, 300}, {800, 800}};
+    for (int i = 0; i < n; i++) {
+        int centerIdx = rand() % 4;
+        float offsetX = (rand() % 201) - 100;
+        float offsetY = (rand() % 201) - 100;
+        float w = 40 + rand() % 121;
+        float h = 40 + rand() % 121;
+        boxes[i].x1 = centers[centerIdx][0] + offsetX;
+        boxes[i].y1 = centers[centerIdx][1] + offsetY;
+        boxes[i].x1 = max(0.0f, min(boxes[i].x1, 1000.0f - w));
+        boxes[i].y1 = max(0.0f, min(boxes[i].y1, 1000.0f - h));
+        boxes[i].x2 = boxes[i].x1 + w;
+        boxes[i].y2 = boxes[i].y1 + h;
+        boxes[i].score = (float)rand() / RAND_MAX;
+    }
+}
+
+void bubbleSort(BoundingBox boxes[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+            if (boxes[j].score < boxes[j + 1].score) {
+                swap(boxes[j], boxes[j + 1]);
+            }
+        }
+    }
+}
+
+void insertionSort(BoundingBox boxes[], int n) {
+    for (int i = 1; i < n; i++) {
+        BoundingBox temp = boxes[i];
+        int j = i - 1;
+        while (j >= 0 && boxes[j].score < temp.score) {
+            boxes[j + 1] = boxes[j];
+            j--;
+        }
+        boxes[j + 1] = temp;
+    }
+}
+
+void merge(BoundingBox boxes[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+    BoundingBox L[n1], R[n2];
+    for (int i = 0; i < n1; i++) L[i] = boxes[left + i];
+    for (int j = 0; j < n2; j++) R[j] = boxes[mid + 1 + j];
+    
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i].score >= R[j].score) boxes[k++] = L[i++];
+        else boxes[k++] = R[j++];
+    }
+    while (i < n1) boxes[k++] = L[i++];
+    while (j < n2) boxes[k++] = R[j++];
+}
+
+void mergeSort(BoundingBox boxes[], int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(boxes, left, mid);
+        mergeSort(boxes, mid + 1, right);
+        merge(boxes, left, mid, right);
+    }
+}
+
+void mergeSort(BoundingBox boxes[], int n) {
+    mergeSort(boxes, 0, n - 1);
+}
+
+int partition(BoundingBox boxes[], int low, int high) {
+    BoundingBox pivot = boxes[high];
+    int i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (boxes[j].score >= pivot.score) {
+            i++;
+            swap(boxes[i], boxes[j]);
+        }
+    }
+    swap(boxes[i + 1], boxes[high]);
+    return i + 1;
+}
+
+void quickSort(BoundingBox boxes[], int low, int high) {
+    if (low < high) {
+        int pi = partition(boxes, low, high);
+        quickSort(boxes, low, pi - 1);
+        quickSort(boxes, pi + 1, high);
+    }
+}
+
+void quickSort(BoundingBox boxes[], int n) {
+    quickSort(boxes, 0, n - 1);
+}
+
+float calculateIOU(BoundingBox a, BoundingBox b) {
+    float x1 = max(a.x1, b.x1);
+    float y1 = max(a.y1, b.y1);
+    float x2 = min(a.x2, b.x2);
+    float y2 = min(a.y2, b.y2);
+    
+    float interArea = max(0.0f, x2 - x1) * max(0.0f, y2 - y1);
+    float aArea = (a.x2 - a.x1) * (a.y2 - a.y1);
+    float bArea = (b.x2 - b.x1) * (b.y2 - b.y1);
+    float unionArea = aArea + bArea - interArea;
+    
+    return unionArea > 0 ? interArea / unionArea : 0.0f;
+}
+
+void NMS(BoundingBox boxes[], int n, BoundingBox result[], int& resultSize) {
+    resultSize = 0;
+    if (n == 0) return;
+    
+    result[resultSize++] = boxes[0];
+    for (int i = 1; i < n; i++) {
+        bool keep = true;
+        for (int j = 0; j < resultSize; j++) {
+            float iou = calculateIOU(boxes[i], result[j]);
+            if (iou > 0.5f) {
+                keep = false;
+                break;
+            }
+        }
+        if (keep) {
+            result[resultSize++] = boxes[i];
+        }
+    }
+}
+
+void copyBoxes(BoundingBox src[], BoundingBox dest[], int n) {
+    for (int i = 0; i < n; i++) {
+        dest[i] = src[i];
+    }
+}
+
+double testSortNMSPerformance(void (*sortFunc)(BoundingBox[], int), 
+                              BoundingBox boxes[], int n) {
+    BoundingBox tempBoxes[n];
+    copyBoxes(boxes, tempBoxes, n);
+    BoundingBox result[n];
+    int resultSize;
+    
+    clock_t start = clock();
+    sortFunc(tempBoxes, n);
+    NMS(tempBoxes, n, result, resultSize);
+    clock_t end = clock();
+    
+    return (double)(end - start) / CLOCKS_PER_SEC * 1000;
+}
+
+void batchTest() {
+    initRandom();
+    int sizes[] = {100, 1000, 5000, 10000};
+    int sizeCount = sizeof(sizes) / sizeof(sizes[0]);
+    void (*sortFuncs[])(BoundingBox[], int) = {bubbleSort, insertionSort, mergeSort, quickSort};
+    const char* sortNames[] = {"冒泡排序", "插入排序", "归并排序", "快速排序"};
+    int sortCount = sizeof(sortFuncs) / sizeof(sortFuncs[0]);
+    
+    cout << "随机分布数据性能测试" << endl;
+    cout << setw(10) << "数据规模" << setw(15) << "冒泡排序(ms)" << setw(15) << "插入排序(ms)" 
+         << setw(15) << "归并排序(ms)" << setw(15) << "快速排序(ms)" << endl;
+    for (int s = 0; s < sizeCount; s++) {
+        int n = sizes[s];
+        BoundingBox boxes[n];
+        generateRandomBoxes(boxes, n);
+        
+        cout << setw(10) << n;
+        for (int f = 0; f < sortCount; f++) {
+            double time = testSortNMSPerformance(sortFuncs[f], boxes, n);
+            cout << setw(15) << fixed << setprecision(2) << time;
+        }
+        cout << endl;
+    }
+    
+    cout << "\n聚集分布数据性能测试" << endl;
+    cout << setw(10) << "数据规模" << setw(15) << "冒泡排序(ms)" << setw(15) << "插入排序(ms)" 
+         << setw(15) << "归并排序(ms)" << setw(15) << "快速排序(ms)" << endl;
+    for (int s = 0; s < sizeCount; s++) {
+        int n = sizes[s];
+        BoundingBox boxes[n];
+        generateClusteredBoxes(boxes, n);
+        
+        cout << setw(10) << n;
+        for (int f = 0; f < sortCount; f++) {
+            double time = testSortNMSPerformance(sortFuncs[f], boxes, n);
+            cout << setw(15) << fixed << setprecision(2) << time;
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    batchTest();
+    cout << "\n实验完成！请根据输出的运行时间进行以下分析：" << endl;
+    cout << "1. 不同排序算法在NMS中的性能对比" << endl;
+    cout << "2. 数据规模（100~10000）对性能的影响" << endl;
+    cout << "3. 随机分布与聚集分布对性能的影响" << endl;
+    cout << "4. 结合理论分析NMS算法的时间复杂度" << endl;
+    return 0;
+}
