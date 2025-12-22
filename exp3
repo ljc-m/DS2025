@@ -1,0 +1,328 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <stack>
+#include <climits>
+#include <cstring>
+using namespace std;
+
+const int MAX_VERTEX = 20;
+
+// 自定义：判断int值是否存在于vector中（替代所有std::find）
+bool contains(const vector<int>& vec, int target) {
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (vec[i] == target) {
+            return true;
+        }
+    }
+    return false;
+}
+
+class Graph {
+private:
+    int vertexNum;
+    int adjMatrix[MAX_VERTEX][MAX_VERTEX];
+public:
+    Graph(int n) {
+        vertexNum = n;
+        memset(adjMatrix, 0, sizeof(adjMatrix));
+    }
+
+    void addEdge(int v1, int v2, int weight) {
+        adjMatrix[v1][v2] = weight;
+        adjMatrix[v2][v1] = weight;
+    }
+
+    void printAdjacencyMatrix() {
+        cout << "邻接矩阵：" << endl;
+        for (int i = 0; i < vertexNum; i++) {
+            char vertex = 'A' + i;
+            cout << vertex << " ";
+            for (int j = 0; j < vertexNum; j++) {
+                cout << adjMatrix[i][j] << "\t";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+
+    void bfs(int start) {
+        bool visited[MAX_VERTEX] = {false};
+        queue<int> q;
+        visited[start] = true;
+        q.push(start);
+        cout << "BFS遍历顺序：";
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            cout << (char)('A' + u) << " ";
+            for (int v = 0; v < vertexNum; v++) {
+                if (adjMatrix[u][v] != 0 && !visited[v]) {
+                    visited[v] = true;
+                    q.push(v);
+                }
+            }
+        }
+        cout << endl << endl;
+    }
+
+    void dfsRecursive(int u, bool visited[]) {
+        visited[u] = true;
+        cout << (char)('A' + u) << " ";
+        for (int v = 0; v < vertexNum; v++) {
+            if (adjMatrix[u][v] != 0 && !visited[v]) {
+                dfsRecursive(v, visited);
+            }
+        }
+    }
+
+    void dfs(int start) {
+        bool visited[MAX_VERTEX] = {false};
+        cout << "DFS遍历顺序：";
+        dfsRecursive(start, visited);
+        cout << endl << endl;
+    }
+
+    void dijkstra(int start) {
+        int dist[MAX_VERTEX];
+        bool visited[MAX_VERTEX] = {false};
+        int prev[MAX_VERTEX];
+        memset(prev, -1, sizeof(prev));
+        for (int i = 0; i < vertexNum; i++) {
+            dist[i] = adjMatrix[start][i] != 0 ? adjMatrix[start][i] : INT_MAX;
+        }
+        dist[start] = 0;
+        visited[start] = true;
+
+        for (int i = 1; i < vertexNum; i++) {
+            int minDist = INT_MAX;
+            int u = -1;
+            for (int v = 0; v < vertexNum; v++) {
+                if (!visited[v] && dist[v] < minDist) {
+                    minDist = dist[v];
+                    u = v;
+                }
+            }
+            if (u == -1) break;
+            visited[u] = true;
+            for (int v = 0; v < vertexNum; v++) {
+                if (!visited[v] && adjMatrix[u][v] != 0 && dist[u] != INT_MAX && dist[u] + adjMatrix[u][v] < dist[v]) {
+                    dist[v] = dist[u] + adjMatrix[u][v];
+                    prev[v] = u;
+                }
+            }
+        }
+
+        cout << "Dijkstra最短路径（起点" << (char)('A' + start) << "）：" << endl;
+        for (int i = 0; i < vertexNum; i++) {
+            if (dist[i] == INT_MAX) {
+                cout << (char)('A' + start) << "到" << (char)('A' + i) << "：无路径" << endl;
+                continue;
+            }
+            cout << (char)('A' + start) << "到" << (char)('A' + i) << "：长度" << dist[i] << "，路径：";
+            stack<int> path;
+            int curr = i;
+            while (curr != -1) {
+                path.push(curr);
+                curr = prev[curr];
+            }
+            while (!path.empty()) {
+                cout << (char)('A' + path.top());
+                path.pop();
+                if (!path.empty()) cout << "->";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+
+    void prim(int start) {
+        int key[MAX_VERTEX];
+        bool inMST[MAX_VERTEX] = {false};
+        int parent[MAX_VERTEX];
+        memset(parent, -1, sizeof(parent));
+        for (int i = 0; i < vertexNum; i++) {
+            key[i] = INT_MAX;
+        }
+        key[start] = 0;
+
+        for (int i = 0; i < vertexNum - 1; i++) {
+            int minKey = INT_MAX;
+            int u = -1;
+            for (int v = 0; v < vertexNum; v++) {
+                if (!inMST[v] && key[v] < minKey) {
+                    minKey = key[v];
+                    u = v;
+                }
+            }
+            if (u == -1) break;
+            inMST[u] = true;
+            for (int v = 0; v < vertexNum; v++) {
+                if (!inMST[v] && adjMatrix[u][v] != 0 && adjMatrix[u][v] < key[v]) {
+                    key[v] = adjMatrix[u][v];
+                    parent[v] = u;
+                }
+            }
+        }
+
+        cout << "Prim最小支撑树（起点" << (char)('A' + start) << "）：" << endl;
+        int totalWeight = 0;
+        for (int i = 0; i < vertexNum; i++) {
+            if (parent[i] != -1) {
+                cout << (char)('A' + parent[i]) << "-" << (char)('A' + i) << "（权重" << adjMatrix[parent[i]][i] << "）" << endl;
+                totalWeight += adjMatrix[parent[i]][i];
+            }
+        }
+        cout << "最小支撑树总权重：" << totalWeight << endl << endl;
+    }
+
+private:
+    void tarjan(int u, int parent, int& time, int disc[], int low[], bool visited[], bool ap[], vector<vector<int>>& bcc, stack<pair<int, int>>& edgeStack) {
+        int children = 0;
+        disc[u] = low[u] = ++time;
+        visited[u] = true;
+
+        for (int v = 0; v < vertexNum; v++) {
+            if (adjMatrix[u][v] == 0) continue;
+            if (!visited[v]) {
+                children++;
+                edgeStack.push({u, v});
+                tarjan(v, u, time, disc, low, visited, ap, bcc, edgeStack);
+                low[u] = min(low[u], low[v]);
+
+                if ((parent == -1 && children > 1) || (parent != -1 && low[v] >= disc[u])) {
+                    ap[u] = true;
+                    vector<int> component;
+                    while (true) {
+                        pair<int, int> edge = edgeStack.top();
+                        edgeStack.pop();
+                        // 用自定义contains替代std::find
+                        if (!contains(component, edge.first)) {
+                            component.push_back(edge.first);
+                        }
+                        if (!contains(component, edge.second)) {
+                            component.push_back(edge.second);
+                        }
+                        if (edge.first == u && edge.second == v) break;
+                    }
+                    bcc.push_back(component);
+                }
+            } else if (v != parent && disc[v] < low[u]) {
+                low[u] = min(low[u], disc[v]);
+                edgeStack.push({u, v});
+            }
+        }
+    }
+
+public:
+    void findBCCAndAP() {
+        int disc[MAX_VERTEX], low[MAX_VERTEX];
+        bool visited[MAX_VERTEX] = {false}, ap[MAX_VERTEX] = {false};
+        memset(disc, 0, sizeof(disc));
+        memset(low, 0, sizeof(low));
+        vector<vector<int>> bcc;
+        stack<pair<int, int>> edgeStack;
+        int time = 0;
+
+        for (int i = 0; i < vertexNum; i++) {
+            if (!visited[i]) {
+                tarjan(i, -1, time, disc, low, visited, ap, bcc, edgeStack);
+                if (!edgeStack.empty()) {
+                    vector<int> component;
+                    while (!edgeStack.empty()) {
+                        pair<int, int> edge = edgeStack.top();
+                        edgeStack.pop();
+                        // 用自定义contains替代std::find
+                        if (!contains(component, edge.first)) {
+                            component.push_back(edge.first);
+                        }
+                        if (!contains(component, edge.second)) {
+                            component.push_back(edge.second);
+                        }
+                    }
+                    bcc.push_back(component);
+                }
+            }
+        }
+
+        cout << "双连通分量：" << endl;
+        for (int i = 0; i < bcc.size(); i++) {
+            cout << "分量" << i + 1 << "：";
+            for (int v : bcc[i]) {
+                cout << (char)('A' + v) << " ";
+            }
+            cout << endl;
+        }
+
+        cout << "关节点：";
+        for (int i = 0; i < vertexNum; i++) {
+            if (ap[i]) {
+                cout << (char)('A' + i) << " ";
+            }
+        }
+        cout << endl << endl;
+    }
+};
+
+Graph buildGraph1() {
+    Graph g(8);
+    g.addEdge(0, 1, 4);
+    g.addEdge(0, 2, 2);
+    g.addEdge(1, 3, 7);
+    g.addEdge(1, 4, 12);
+    g.addEdge(1, 5, 13);
+    g.addEdge(2, 4, 1);
+    g.addEdge(2, 5, 3);
+    g.addEdge(3, 4, 6);
+    g.addEdge(3, 6, 2);
+    g.addEdge(4, 5, 9);
+    g.addEdge(4, 7, 5);
+    g.addEdge(5, 6, 11);
+    g.addEdge(5, 7, 8);
+    g.addEdge(6, 7, 14);
+    return g;
+}
+
+Graph buildGraph2() {
+    Graph g(12);
+    g.addEdge(0, 1, 1);
+    g.addEdge(0, 2, 1);
+    g.addEdge(1, 3, 1);
+    g.addEdge(1, 4, 1);
+    g.addEdge(3, 4, 1);
+    g.addEdge(2, 5, 1);
+    g.addEdge(2, 6, 1);
+    g.addEdge(5, 6, 1);
+    g.addEdge(4, 7, 1);
+    g.addEdge(7, 8, 1);
+    g.addEdge(8, 9, 1);
+    g.addEdge(8, 10, 1);
+    g.addEdge(9, 10, 1);
+    g.addEdge(10, 11, 1);
+    return g;
+}
+
+int main() {
+    Graph graph1 = buildGraph1();
+    cout << "图1 相关操作" << endl;
+    graph1.printAdjacencyMatrix();
+
+    int startA = 0;
+    graph1.bfs(startA);
+    graph1.dfs(startA);
+    graph1.dijkstra(startA);
+    graph1.prim(startA);
+
+    Graph graph2 = buildGraph2();
+    cout << "图2 双连通分量与关节点 " << endl;
+    cout << "起点A（索引0）结果：" << endl;
+    graph2.findBCCAndAP();
+
+    cout << "起点E（索引4）结果：" << endl;
+    graph2.findBCCAndAP();
+
+    cout << "起点I（索引8）结果：" << endl;
+    graph2.findBCCAndAP();
+
+    return 0;
+}
