@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图书管理系统 - 首页</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>图书管理系统</h1>
+        <div class="user-info">
+            欢迎，<span id="username"></span>
+            <a href="/login" id="logout">退出登录</a>
+        </div>
+    </div>
+    <div class="nav">
+        <a href="/book_list">图书列表</a>
+        <a href="/borrow_list">我的借阅</a>
+        <a href="/visual/category" target="_blank">图书分类统计</a>
+        <a href="javascript:;" id="addBookBtn" style="display: none;">添加图书</a>
+    </div>
+    <div class="content">
+        <h2>系统首页</h2>
+        <p>欢迎使用图书管理系统，支持图书查询、借阅、归还等功能~</p>
+
+        <!-- 添加图书弹窗 -->
+        <div class="modal" id="addBookModal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>添加新图书</h3>
+                <form id="addBookForm">
+                    <div class="form-item">
+                        <label>书名：</label>
+                        <input type="text" id="bookName" required>
+                    </div>
+                    <div class="form-item">
+                        <label>作者：</label>
+                        <input type="text" id="bookAuthor" required>
+                    </div>
+                    <div class="form-item">
+                        <label>分类：</label>
+                        <input type="text" id="bookCategory" required>
+                    </div>
+                    <button type="submit">提交</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

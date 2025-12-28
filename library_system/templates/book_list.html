@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图书列表 - 图书管理系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>图书管理系统</h1>
+        <div class="user-info">
+            欢迎，<span id="username"></span>
+            <a href="/login" id="logout">退出登录</a>
+        </div>
+    </div>
+    <div class="nav">
+        <a href="/index">返回首页</a>
+        <a href="/borrow_list">我的借阅</a>
+    </div>
+    <div class="content">
+        <h2>图书列表</h2>
+        <div class="search-bar">
+            <input type="text" id="searchName" placeholder="输入书名查询">
+            <input type="text" id="searchCategory" placeholder="输入分类查询">
+            <button id="searchBtn">查询</button>
+        </div>
+        <div class="book-list">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>图书ID</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>分类</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="bookTableBody">
+                    <!-- 图书数据将通过JS动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

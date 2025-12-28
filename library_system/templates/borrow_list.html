@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的借阅 - 图书管理系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>图书管理系统</h1>
+        <div class="user-info">
+            欢迎，<span id="username"></span>
+            <a href="/login" id="logout">退出登录</a>
+        </div>
+    </div>
+    <div class="nav">
+        <a href="/index">返回首页</a>
+        <a href="/book_list">图书列表</a>
+    </div>
+    <div class="content">
+        <h2>我的借阅记录</h2>
+        <div class="borrow-list">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>记录ID</th>
+                        <th>用户名</th>
+                        <th>图书名</th>
+                        <th>借阅日期</th>
+                        <th>归还日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowTableBody">
+                    <!-- 借阅数据将通过JS动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

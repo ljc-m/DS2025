@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图书管理系统 - 登录</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* 额外添加：确保注册/登录链接可点击样式更明显 */
+        .register-link a, .login-link a {
+            color: #4CAF50; /* 醒目绿色 */
+            text-decoration: none;
+            cursor: pointer; /* 鼠标悬浮显示手型，明确可点击 */
+        }
+        .register-link a:hover, .login-link a:hover {
+            color: #45a049; /* 悬浮加深颜色，提升交互体验 */
+            text-decoration: underline; /* 悬浮下划线，进一步提示可点击 */
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>图书管理系统</h2>
+        <form id="loginForm">
+            <div class="form-item">
+                <label>用户名：</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-item">
+                <label>密码：</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">登录</button>
+            <div class="register-link">还没有账号？<a href="javascript:;" id="goRegister">立即注册</a></div>
+        </form>
+        <form id="registerForm" style="display: none;">
+            <div class="form-item">
+                <label>用户名：</label>
+                <input type="text" id="regUsername" required>
+            </div>
+            <div class="form-item">
+                <label>密码：</label>
+                <input type="password" id="regPassword" required>
+            </div>
+            <button type="submit">注册</button>
+            <div class="login-link">已有账号？<a href="javascript:;" id="goLogin">立即登录</a></div>
+        </form>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
